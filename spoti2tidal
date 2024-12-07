@@ -1,0 +1,39 @@
+def main():
+    # Get access token for Tidal
+    access_token = get_tidal_access_token()
+    
+    # Get the list of songs from Spotify
+    playlist_name = "My Library Playlist"  # Example playlist name
+    song_list = read_song_list("./output.txt")  # Path to your song list
+    song_uris = get_song_uris_batch(song_list)  # Get Spotify URIs (assuming batch processing)
+    
+    # Create Tidal playlist
+    user_id = 'your_tidal_user_id'  # Replace with your Tidal user ID
+    tidal_playlist_name = f"Matching Playlist - {playlist_name}"
+    tidal_playlist_id = create_tidal_playlist(user_id, tidal_playlist_name, access_token)
+
+    # TODO: add re-try logic to handle query limits
+    if tidal_playlist_id:
+        print(f"Created Tidal playlist with ID: {tidal_playlist_id}")
+        
+        # Find matching tracks on Tidal and add them
+        tidal_track_ids = []
+        for song in song_list:
+            tidal_track_id = search_song_on_tidal(song, access_token)
+            if tidal_track_id:
+                tidal_track_ids.append(tidal_track_id)
+        
+        # Add tracks to the Tidal playlist
+        if tidal_track_ids:
+            success = add_tracks_to_tidal_playlist(tidal_playlist_id, tidal_track_ids, access_token)
+            if success:
+                print("Successfully added tracks to Tidal playlist!")
+            else:
+                print("Failed to add tracks to Tidal playlist.")
+        else:
+            print("No matching tracks found on Tidal.")
+    else:
+        print("Failed to create Tidal playlist.")
+
+if __name__ == "__main__":
+    main()
